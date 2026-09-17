@@ -32,7 +32,7 @@ Ce projet a été construit et publié comme un **Claude Artifact** (une page we
 | `window.claude.use("downloads")` | Permet d'enregistrer les exports CSV / Excel sur l'ordinateur de la personne connectée. |
 | `window.claude.use("user")` | Détermine qui a les droits d'administration (`canEdit` / `isOwner`) sur l'artifact. |
 
-**Ces trois fonctions n'existent que lorsque la page est ouverte via une session Claude.** Si tu ouvres `index.html` directement dans un navigateur (double-clic), ou si tu le déploies sur GitHub Pages, Netlify, Vercel, etc., `window.claude` n'existe pas : le code le détecte et bascule automatiquement sur un jeu de données de démonstration gardé en mémoire (`LOCAL_FALLBACK` dans le script). Tu peux donc toujours consulter et faire évoluer l'interface, les formulaires et le design localement — mais sans persistance réelle des données ni export fonctionnel.
+**Ces trois fonctions n'existent que lorsque la page est ouverte via une session Claude.** Si tu ouvres `index.html` directement dans un navigateur (double-clic), ou si tu le déploies sur GitHub Pages, Netlify, Vercel, etc., `window.claude` n'existe pas : le code le détecte et bascule sur un stockage local vide en mémoire (`LOCAL_FALLBACK` dans le script — volontairement sans aucune proposition d'exemple). Tu peux donc toujours consulter et faire évoluer l'interface, les formulaires et le design localement, avec les pages vides ("Aucun sujet pour le moment") — mais sans persistance réelle des données ni export fonctionnel.
 
 Ce dépôt a pour rôle de **conserver et versionner le code source**. Pour une utilisation en production avec plusieurs collaborateurs, deux options :
 
@@ -51,7 +51,7 @@ cd camusat-talk
 ## Lancer l'application
 
 **Option 1 — ouverture directe**
-Double-clique sur `index.html`, ou ouvre-le depuis ton navigateur (`Fichier > Ouvrir`). Tu verras l'interface avec des données de démonstration ; l'enregistrement des propositions et les exports ne seront pas fonctionnels dans ce mode.
+Double-clique sur `index.html`, ou ouvre-le depuis ton navigateur (`Fichier > Ouvrir`). Tu verras l'interface avec des listes vides (aucune donnée d'exemple n'est incluse) ; l'enregistrement des propositions et les exports ne seront pas fonctionnels dans ce mode.
 
 **Option 2 — via un petit serveur local** (recommandé pour éviter les restrictions de sécurité de certains navigateurs sur les fichiers locaux) :
 
@@ -85,7 +85,7 @@ Le Dashboard est protégé par un code d'accès défini dans `index.html` (const
 - change la valeur de `ADMIN_CODE`, et
 - privilégie, quand c'est possible, les droits de partage natifs de l'Artifact Claude (« Peut modifier ») plutôt que ce code, qui n'est qu'une commodité d'interface.
 
-Aucune clé API, jeton ou identifiant réel n'est présent dans ce dépôt. Les propositions de démonstration (marquées « Exemple » dans l'interface) utilisent des noms et des adresses e-mail fictifs.
+Aucune clé API, jeton ou identifiant réel n'est présent dans ce dépôt, et aucune donnée d'exemple n'est plus embarquée dans le code : l'application démarre sur une base vide.
 
 ## Limites connues / pistes d'évolution
 

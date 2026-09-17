@@ -341,34 +341,10 @@
     lastSubmitted: null
   };
 
-  /* local fallback demo data (used only if the shared db capability is unavailable in this view) */
-  var LOCAL_FALLBACK = buildDemoDocs();
+  /* local fallback (used only if the shared db capability is unavailable in this view).
+     Kept empty on purpose: no example proposals ship with the app anymore. */
+  var LOCAL_FALLBACK = [];
 
-  function buildDemoDocs(){
-    var base = Date.now();
-    var rows = [
-      ["Fatou Ndiaye","Cheffe de Projet — Bureau d'Études","Piloter un projet télécom sans perdre son équipe en route","leadership","Ibrahima Sarr","Direction des Opérations","Partager des méthodes concrètes de priorisation et de communication d'équipe","30 minutes","validee",12],
-      ["Moussa Diallo","Ingénieur Génie Civil — Fondations","Dimensionnement rapide des fondations pylônes en sol sableux","technique","Astou Kassé","Bureau d'Études","Transmettre une méthode de pré-dimensionnement utilisable sur le terrain","45 minutes","programmee",9],
-      ["Aïssatou Ba","Chargée RH","Mieux gérer son énergie plutôt que son temps","devperso","Khady Fall","Ressources Humaines","Donner des outils simples contre la surcharge mentale","20 minutes","attente",5],
-      ["Cheikh Gueye","Responsable IT","L'IA générative au service des études techniques","innovation","Fatou Ndiaye","Bureau d'Études","Montrer 3 cas d'usage concrets testés en interne","30 minutes","realisee",21],
-      ["Marième Sow","Chargée de Communication","Raconter un projet pour convaincre en 3 minutes","communication","Moussa Diallo","Bureau d'Études","Structurer un pitch clair pour un client ou la Direction","15 minutes","validee",8],
-      ["Ousmane Faye","Superviseur HSE","Prévenir les troubles musculo-squelettiques sur chantier","sante","Aïssatou Ba","QHSE","Sensibiliser aux bons gestes et postures sur site","20 minutes","programmee",6],
-      ["Ndèye Diop","Ingénieure Structures","Retour d'expérience : pylône haubané 150m","technique","Cheikh Gueye","Bureau d'Études","Partager les leçons apprises d'un chantier complexe","45 minutes","attente",3],
-      ["Abdou Karim Sy","Chargé d'Affaires","Négocier sans braquer le client","communication","Marième Sow","Commercial","Donner des repères simples pour des échanges gagnant-gagnant","30 minutes","realisee",14]
-    ];
-    return rows.map(function(r,i){
-      var d = new Date(base - i*86400000*2);
-      var due = new Date(base + (i+2)*86400000*4);
-      return {
-        id:"demo_"+i,
-        presenterName:r[0], presenterRole:r[1], presenterEmail:r[0].toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z]+/g,".")+"@camusat.com",
-        title:r[2], description:"Session d'échange autour de « "+r[2]+" », ouverte à toutes les équipes de Camusat Sénégal.",
-        theme:r[3], mentorName:r[4], mentorDept:r[5], objective:r[6], duration:r[7],
-        desiredDate: due.toISOString().slice(0,10), status:r[8],
-        createdAt: d.toISOString(), demo:true, votes:r[9]
-      };
-    });
-  }
 
   /* ============================= TOASTS ============================= */
   function toast(title, body, isError){
