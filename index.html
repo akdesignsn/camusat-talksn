@@ -7,10 +7,11 @@
   cette page est ouverte via une session Claude (elle héberge la page et lui
   accorde ces capacités à l'exécution). Ouvert ailleurs (double-clic local,
   GitHub Pages, un autre hébergeur...), window.claude n'existe pas : le code
-  bascule automatiquement sur des données de démonstration en mémoire
-  (voir LOCAL_FALLBACK plus bas) et les fonctions suivantes sont indisponibles :
-  enregistrement partagé des propositions, export CSV/Excel, distinction
-  propriétaire/éditeur. Détails et pistes d'évolution dans README.md.
+  bascule sur un stockage local vide en mémoire (voir LOCAL_FALLBACK plus bas,
+  volontairement sans aucune proposition d'exemple) et les fonctions suivantes
+  sont indisponibles : enregistrement partagé des propositions, export
+  CSV/Excel, distinction propriétaire/éditeur. Détails et pistes d'évolution
+  dans README.md.
 
   Aucune information sensible n'est stockée dans ce fichier. La constante
   ADMIN_CODE ci-dessous est un simple code d'accès d'interface (pas un secret
@@ -219,6 +220,8 @@
   .mini-select{font-size:12.5px;padding:6px 8px;border-radius:8px}
   .icon-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:6px 8px;cursor:pointer;color:var(--text-muted)}
   .icon-btn:hover{background:var(--navy-tint);color:var(--navy)}
+  .icon-btn:disabled{opacity:.5;cursor:not-allowed}
+  .icon-btn.confirm{background:var(--red-tint);border-color:var(--red);color:var(--red)}
 
   /* ---------- Gate (admin passcode) ---------- */
   .gate-wrap{max-width:420px;margin:60px auto;background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-md);padding:36px;text-align:center}
@@ -323,7 +326,8 @@
     download:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     users:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M2 20c1-3.5 3.5-5.5 7-5.5S15 16.5 16 20"/><circle cx="17.5" cy="9" r="2.3"/><path d="M17 13.2c2.2.3 3.7 1.8 4.3 4"/></svg>',
     layers:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-    target:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>'
+    target:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/></svg>',
+    trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-8 0v12a2 2 0 002 2h6a2 2 0 002-2V7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
 
   /* ============================= STATE ============================= */
@@ -412,6 +416,19 @@
     } else {
       var it = LOCAL_FALLBACK.find(function(x){ return x.id===id; });
       if(it){ Object.assign(it, patch); state.items = LOCAL_FALLBACK; render(); }
+    }
+  }
+
+  function deleteProposition(id, cb){
+    if(state.dbAvailable && state.db){
+      state.db.collection("propositions").doc(id).delete().then(function(){ cb(true); })
+        .catch(function(e){ cb(false, e); });
+    } else {
+      var idx = LOCAL_FALLBACK.findIndex(function(x){ return x.id===id; });
+      if(idx>-1) LOCAL_FALLBACK.splice(idx,1);
+      state.items = LOCAL_FALLBACK;
+      render();
+      cb(true);
     }
   }
 
@@ -803,7 +820,7 @@
         '<td><input class="mentor-input" data-id="'+esc(it.id)+'" value="'+esc(it.mentorName||"")+'" style="width:140px;padding:6px 8px;font-size:12.5px"></td>'+
         '<td class="cell-sub">'+fmtDate(it.desiredDate)+'</td>'+
         '<td><select class="mini-select status-select" data-id="'+esc(it.id)+'">'+statusOpts+'</select></td>'+
-        '<td></td>'+
+        '<td><button type="button" class="icon-btn btn-delete" data-id="'+esc(it.id)+'" title="Supprimer cette proposition">'+ICONS.trash+'</button></td>'+
       '</tr>';
     }).join("");
   }
@@ -854,6 +871,33 @@
       inp.addEventListener("change", function(){
         updateProposition(inp.getAttribute("data-id"), {mentorName: inp.value.trim()});
         toast("Mentor mis à jour", inp.value.trim());
+      });
+    });
+    document.querySelectorAll(".btn-delete").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        if(btn.dataset.confirm !== "1"){
+          btn.dataset.confirm = "1";
+          btn.classList.add("confirm");
+          btn.title = "Cliquer à nouveau pour confirmer la suppression";
+          if(btn._revertTimer) clearTimeout(btn._revertTimer);
+          btn._revertTimer = setTimeout(function(){
+            btn.dataset.confirm = "0";
+            btn.classList.remove("confirm");
+            btn.title = "Supprimer cette proposition";
+          }, 4000);
+          return;
+        }
+        btn.disabled = true;
+        deleteProposition(id, function(success, err){
+          if(success){ toast("Proposition supprimée", ""); }
+          else{
+            btn.disabled = false;
+            btn.dataset.confirm = "0";
+            btn.classList.remove("confirm");
+            toast("Suppression impossible", (err && err.message) || "Réessayez.", true);
+          }
+        });
       });
     });
   }
